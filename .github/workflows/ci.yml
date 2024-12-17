@@ -1,0 +1,43 @@
+name: CI/CD Pipeline for Robot Framework Tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up SSH key for VM access
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Run tests on VM via SSH
+        run: |
+          ssh -o StrictHostKeyChecking=no user@your-vm-ip 'cd /path/to/your/tests && robot my_test.robot'
+
+      - name: Upload Test Results as Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: robot-results
+          path: ./output.xml
+
+  post-actions:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post test results (example Slack integration)
+        uses: slackapi/slack-github-action@v1.23.0
+        with:
+          payload: '{"text":"Robot Framework Test Results: Success"}'
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
