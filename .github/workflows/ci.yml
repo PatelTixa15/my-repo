@@ -35,7 +35,7 @@ jobs:
           robot test_suite_2.robot  # (Optional) Another test suite, add more as needed
 
       - name: Upload Robot Framework Test Results to GitHub
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3  # Update this line to use v3
         with:
           name: robot-test-results
           path: robot_tests/output/*.xml  # Path to the output XML test results
@@ -49,4 +49,3 @@ jobs:
         run: |
           curl -X POST -H "Content-Type: application/json" -d @robot_tests/output/results.json https://reportportal.example.com/api/v1/import_results
           # Replace with your actual ReportPortal API endpoint and results format
-
