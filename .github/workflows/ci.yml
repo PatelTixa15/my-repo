@@ -1,4 +1,4 @@
-name: CI Pipeline for Robot Framework Tests on Windows
+name: Run Robot Framework Tests for W3Schools SQL Page
 
 on:
   push:
@@ -10,42 +10,36 @@ on:
 
 jobs:
   test:
-    runs-on: windows-latest  # This specifies to use a Windows-based runner
-
+    runs-on: ubuntu-latest  # Use Ubuntu runner (you can also use windows-latest or macos-latest if needed)
+    
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v2  # Check out your code
+        uses: actions/checkout@v2  # Check out the repository code
 
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.9'  # Use the Python version you need
+          python-version: '3.9'  # Set the Python version (adjust if needed)
 
-      - name: Install Robot Framework and Dependencies
+      - name: Install Robot Framework and SeleniumLibrary
         run: |
           python -m pip install --upgrade pip
           pip install robotframework  # Install Robot Framework
-          pip install robotframework-seleniumlibrary  # Install Selenium Library (if needed)
-          pip install allure-robotframework  # Install Allure Report generator (optional, for reporting)
-      
-      - name: Run Robot Framework Tests
-        run: |
-          cd robot_tests  # Navigate to the folder containing the tests
-          robot test_suite_1.robot  # Execute your Robot Framework test suite
-          robot test_suite_2.robot  # (Optional) Another test suite, add more as needed
+          pip install robotframework-seleniumlibrary  # Install SeleniumLibrary
+          sudo apt-get install -y chromium-browser  # Install Chromium browser
 
-      - name: Upload Robot Framework Test Results to GitHub
-        uses: actions/upload-artifact@v3  # Update this line to use v3
+      - name: Set up Chrome for Selenium
+        run: |
+          export DISPLAY=:99  # Set display for the browser
+          nohup Xvfb :99 &  # Run Xvfb for headless display
+
+      - name: Run Robot Framework Test
+        run: |
+          robot open_w3schools_sql.robot  # Run the test script (adjust path if necessary)
+
+      - name: Upload Robot Framework Test Results
+        uses: actions/upload-artifact@v3  # Upload test result files
         with:
           name: robot-test-results
-          path: robot_tests/output/*.xml  # Path to the output XML test results
+          path: output/*.xml  # Path to the Robot Framework result XML files
 
-      - name: Generate Allure Report (Optional)
-        run: |
-          pip install allure-pytest
-          allure serve robot_tests/output  # Generate Allure report from the XML results
-          
-      - name: Post Test Results to ReportPortal (Optional)
-        run: |
-          curl -X POST -H "Content-Type: application/json" -d @robot_tests/output/results.json https://reportportal.example.com/api/v1/import_results
-          # Replace with your actual ReportPortal API endpoint and results format
