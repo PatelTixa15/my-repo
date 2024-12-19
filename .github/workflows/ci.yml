@@ -1,4 +1,4 @@
-name: CI/CD Pipeline for Robot Framework Tests
+name: CI Pipeline for Robot Framework Tests on Windows
 
 on:
   push:
@@ -10,34 +10,43 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest  # This specifies to use a Windows-based runner
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+      - name: Checkout Repository
+        uses: actions/checkout@v2  # Check out your code
 
-      - name: Set up SSH key for VM access
-        uses: webfactory/ssh-agent@v0.5.3
+      - name: Set up Python
+        uses: actions/setup-python@v2
         with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          python-version: '3.9'  # Use the Python version you need
 
-      - name: Run tests on VM via SSH
+      - name: Install Robot Framework and Dependencies
         run: |
-          ssh -o StrictHostKeyChecking=no user@your-vm-ip 'cd /path/to/your/tests && robot my_test.robot'
+          python -m pip install --upgrade pip
+          pip install robotframework  # Install Robot Framework
+          pip install robotframework-seleniumlibrary  # Install Selenium Library (if needed)
+          pip install allure-robotframework  # Install Allure Report generator (optional, for reporting)
+      
+      - name: Run Robot Framework Tests
+        run: |
+          cd robot_tests  # Navigate to the folder containing the tests
+          robot test_suite_1.robot  # Execute your Robot Framework test suite
+          robot test_suite_2.robot  # (Optional) Another test suite, add more as needed
 
-      - name: Upload Test Results as Artifacts
+      - name: Upload Robot Framework Test Results to GitHub
         uses: actions/upload-artifact@v2
         with:
-          name: robot-results
-          path: ./output.xml
+          name: robot-test-results
+          path: robot_tests/output/*.xml  # Path to the output XML test results
 
-  post-actions:
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Post test results (example Slack integration)
-        uses: slackapi/slack-github-action@v1.23.0
-        with:
-          payload: '{"text":"Robot Framework Test Results: Success"}'
-        env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+      - name: Generate Allure Report (Optional)
+        run: |
+          pip install allure-pytest
+          allure serve robot_tests/output  # Generate Allure report from the XML results
+          
+      - name: Post Test Results to ReportPortal (Optional)
+        run: |
+          curl -X POST -H "Content-Type: application/json" -d @robot_tests/output/results.json https://reportportal.example.com/api/v1/import_results
+          # Replace with your actual ReportPortal API endpoint and results format
+
