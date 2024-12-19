@@ -10,16 +10,16 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest  # Use Ubuntu runner (you can also use windows-latest or macos-latest if needed)
-    
+    runs-on: ubuntu-latest # Use Ubuntu runner (you can also use windows-latest or macos-latest if needed)
+
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v2  # Check out the repository code
+        uses: actions/checkout@v2 # Check out the repository code
 
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.9'  # Set the Python version (adjust if needed)
+          python-version: "3.9" # Set the Python version (adjust if needed)
 
       - name: Install Robot Framework and SeleniumLibrary
         run: |
@@ -38,8 +38,8 @@ jobs:
           robot open_w3schools_sql.robot  # Run the test script (adjust path if necessary)
 
       - name: Upload Robot Framework Test Results
-        uses: actions/upload-artifact@v3  # Upload test result files
+        uses: actions/upload-artifact@v3 # Upload test result files
         with:
           name: robot-test-results
-          path: output/*.xml  # Path to the Robot Framework result XML files
+          path: output/*.xml # Path to the Robot Framework result XML files
 
