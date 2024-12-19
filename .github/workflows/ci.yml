@@ -10,36 +10,56 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest # Use Ubuntu runner (you can also use windows-latest or macos-latest if needed)
+    runs-on: ubuntu-latest  # Use Ubuntu runner
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v2 # Check out the repository code
+        uses: actions/checkout@v2  # Check out the repository code
 
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: "3.9" # Set the Python version (adjust if needed)
+          python-version: '3.9'  # Use the Python version you need
 
       - name: Install Robot Framework and SeleniumLibrary
         run: |
           python -m pip install --upgrade pip
           pip install robotframework  # Install Robot Framework
           pip install robotframework-seleniumlibrary  # Install SeleniumLibrary
+          sudo apt-get update  # Update package lists
           sudo apt-get install -y chromium-browser  # Install Chromium browser
+          sudo apt-get install -y xvfb  # Install Xvfb for headless display
+
+      - name: Install ChromeDriver
+        run: |
+          CHROMIUM_VERSION=$(chromium-browser --version | sed 's/[^0-9]*\([0-9]*\.[0-9]*\.[0-9]*\)\..*/\1/')
+          echo "Chromium version: $CHROMIUM_VERSION"
+          wget https://chromedriver.storage.googleapis.com/114.0.5735.90/chromedriver_linux64.zip
+          unzip chromedriver_linux64.zip
+          sudo mv chromedriver /usr/local/bin/
 
       - name: Set up Chrome for Selenium
         run: |
-          export DISPLAY=:99  # Set display for the browser
-          nohup Xvfb :99 &  # Run Xvfb for headless display
+          # Start Xvfb for virtual display
+          export DISPLAY=:99
+          nohup Xvfb :99 &  # Run Xvfb in the background for headless browser
 
       - name: Run Robot Framework Test
         run: |
           robot open_w3schools_sql.robot  # Run the test script (adjust path if necessary)
 
       - name: Upload Robot Framework Test Results
-        uses: actions/upload-artifact@v3 # Upload test result files
+        uses: actions/upload-artifact@v3  # Upload test result files
         with:
           name: robot-test-results
-          path: output/*.xml # Path to the Robot Framework result XML files
+          path: output/*.xml  # Path to the Robot Framework result XML files
 
+      - name: Debugging: List Installed Packages
+        run: |
+          pip freeze  # List installed Python packages
+          chromium-browser --version  # Check Chromium version
+          chromedriver --version  # Check ChromeDriver version
+
+      - name: Debugging: Check if Xvfb is running
+        run: |
+          ps aux | grep Xvfb  # Check if Xvfb is running in the background
